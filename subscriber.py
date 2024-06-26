@@ -2,11 +2,11 @@ import paho.mqtt.client as mqtt
 import json
 import firebase_admin
 from firebase_admin import credentials, db
+from datetime import datetime
 
-# # Initialize Firebase
-cred = credentials.Certificate('./devsecopslbprojet-firebase-adminsdk-zhm7r-e29a950853.json')  # Replace with the path to your Firebase credentials JSON file
+cred = credentials.Certificate('./devsecopslbprojet-firebase-adminsdk-zhm7r-e29a950853.json')  
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://devsecopslbprojet-default-rtdb.europe-west1.firebasedatabase.app/'  # Replace with your Firebase Realtime Database URL
+    'databaseURL': 'https://devsecopslbprojet-default-rtdb.europe-west1.firebasedatabase.app/' 
 })
 
 # Fonction de connexion MQTT et de réception de message
@@ -25,9 +25,13 @@ def on_message(client, userdata, msg):
             data = json.loads(payload)
             print(f"Received message: Temperature: {data['temp']}°C, Humidity: {data['humidity']}%")
             
-            # Push data to Firebase
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
             ref = db.reference('sensor_data')
-            ref.push({
+            snapshot = ref.get()
+            next_index = len(snapshot) if snapshot else 1
+            ref.child(str(next_index)).set({
+                'timestamp': timestamp,
                 'temperature': data['temp'],
                 'humidity': data['humidity']
             })
@@ -40,7 +44,6 @@ def on_message(client, userdata, msg):
 
 def on_disconnect(client, userdata, rc):
     print("Disconnected with result code " + str(rc))
-    # Try to reconnect if disconnected unintentionally
     if rc != 0:
         print("Unexpected disconnection. Trying to reconnect...")
         try:
