@@ -4,12 +4,13 @@ import firebase_admin
 from firebase_admin import credentials, db
 from datetime import datetime
 
-cred = credentials.Certificate('./devsecopslbprojet-firebase-adminsdk-zhm7r-e29a950853.json')  
+# Initialize Firebase connection
+cred = credentials.Certificate('./devsecopslbprojet-firebase-adminsdk-zhm7r-342dcd7ba6.json')  
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://devsecopslbprojet-default-rtdb.europe-west1.firebasedatabase.app/' 
 })
 
-# Fonction de connexion MQTT et de réception de message
+# MQTT connection and message reception functions
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected successfully with result code " + str(rc))
@@ -20,10 +21,10 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     try:
         payload = msg.payload.decode('utf-8')
-        print(f"Raw message payload: {payload}")  # Afficher le contenu brut du message
+        print(f"Raw message payload: {payload}")  # Display raw message content
         if payload:
             data = json.loads(payload)
-            print(f"Received message: Temperature: {data['temp']}°C, Humidity: {data['humidity']}%")
+            print(f"Received message: ID: {data['id_capteur']}, Temperature: {data['temp']}°C, Humidity: {data['humidity']}%, Latitude: {data['position']['lat']}, Longitude: {data['position']['lon']}")
             
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -33,7 +34,10 @@ def on_message(client, userdata, msg):
             ref.child(str(next_index)).set({
                 'timestamp': timestamp,
                 'temperature': data['temp'],
-                'humidity': data['humidity']
+                'humidity': data['humidity'],
+                'id_capteur': data['id_capteur'],
+                'latitude': data['position']['lat'],
+                'longitude': data['position']['lon']
             })
         else:
             print("Received an empty message")
@@ -54,7 +58,8 @@ def on_disconnect(client, userdata, rc):
 def on_connect_fail(client, userdata, rc):
     print("Failed to connect with result code " + str(rc))
 
-client = mqtt.Client(protocol=mqtt.MQTTv311)  # Utilisation de MQTTv311
+# Initialize MQTT client
+client = mqtt.Client(protocol=mqtt.MQTTv311)
 client.on_connect = on_connect
 client.on_message = on_message
 client.on_disconnect = on_disconnect
