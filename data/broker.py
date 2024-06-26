@@ -4,7 +4,7 @@ import random
 import paho.mqtt.client as mqtt
 
 # MQTT Server Parameters
-MQTT_CLIENT_ID = "sensor-simulator-1"  # Changez cet identifiant pour chaque capteur simulé
+MQTT_CLIENT_ID = "sensor-simulator-1" # Identifiant unique du client
 MQTT_BROKER = "broker.mqttdashboard.com"
 MQTT_TOPIC = "wokwi-weather"
 
@@ -33,7 +33,7 @@ while True:
     if message != prev_weather:
         print("Updated!")
         print(f"Reporting to MQTT topic {MQTT_TOPIC}: {message}")
-        client.publish(MQTT_TOPIC, message, qos=1)  # Utilisation de QoS 1
+        client.publish(MQTT_TOPIC, message, qos=1)  # Utilisation de QoS 1 pour eviter les doublons
         prev_weather = message
     else:
         print("No change")
