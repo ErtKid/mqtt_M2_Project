@@ -4,15 +4,21 @@ import random
 import paho.mqtt.client as mqtt
 
 # MQTT Server Parameters
-MQTT_CLIENT_ID = "sensor-simulator"
+MQTT_CLIENT_ID = "sensor-simulator-1"  # Changez cet identifiant pour chaque capteur simulé
 MQTT_BROKER = "broker.mqttdashboard.com"
 MQTT_TOPIC = "wokwi-weather"
+
+# Position du capteur (exemple : latitude et longitude)
+CAPTEUR_POSITION = {"lat": 48.8566, "lon": 2.3522}  # Paris, France
 
 # Fonction pour simuler la mesure du capteur
 def measure():
     return {
+        "id_capteur": MQTT_CLIENT_ID,
+        "position": CAPTEUR_POSITION,
         "temp": round(random.uniform(20.0, 30.0), 2),  # Température entre 20 et 30 degrés Celsius
         "humidity": round(random.uniform(30.0, 60.0), 2),  # Humidité entre 30% et 60%
+        "timestamp": time.time()
     }
 
 print("Connecting to MQTT server... ", end="")
