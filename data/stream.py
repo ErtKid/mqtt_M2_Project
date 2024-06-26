@@ -16,7 +16,7 @@ def fetch_data():
         ref = db.reference('sensor_data')
         snapshot = ref.get()
         
-        if not snapshot:
+        if snapshot is None:
             st.warning('No data found in Firebase.')
             return [], [], []
         
@@ -27,15 +27,21 @@ def fetch_data():
         if isinstance(snapshot, list):
             # Handle case where snapshot is a list of entries
             for entry in snapshot:
-                timestamps.append(entry.get('timestamp', ''))
-                temperatures.append(entry.get('temp', ''))
-                humidities.append(entry.get('humidity', ''))
+                if entry is not None:
+                    timestamps.append(entry.get('timestamp', ''))
+                    temperatures.append(entry.get('temp', ''))
+                    humidities.append(entry.get('humidity', ''))
+                else:
+                    st.warning('Encountered None entry in list snapshot.')
         elif isinstance(snapshot, dict):
             # Handle case where snapshot is a dictionary of entries
             for key, data_point in snapshot.items():
-                timestamps.append(data_point.get('timestamp', ''))
-                temperatures.append(data_point.get('temp', ''))
-                humidities.append(data_point.get('humidity', ''))
+                if data_point is not None:
+                    timestamps.append(data_point.get('timestamp', ''))
+                    temperatures.append(data_point.get('temp', ''))
+                    humidities.append(data_point.get('humidity', ''))
+                else:
+                    st.warning(f'Encountered None entry for key {key} in dict snapshot.')
         else:
             st.warning('Unexpected data format returned from Firebase.')
             return [], [], []
@@ -59,7 +65,11 @@ def main():
         return
     
     # Convert timestamps to datetime objects for plotting
-    timestamps = [datetime.strptime(ts, '%Y-%m-%d %H:%M:%S') for ts in timestamps]
+    try:
+        timestamps = [datetime.strptime(ts, '%Y-%m-%d %H:%M:%S') for ts in timestamps]
+    except ValueError as ve:
+        st.error(f"Error parsing timestamps: {ve}")
+        return
     
     # Plotting temperature graph
     st.subheader('Temperature Over Time')
