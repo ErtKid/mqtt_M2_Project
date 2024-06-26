@@ -94,41 +94,11 @@ def main():
     ax_humidity.xaxis.set_major_formatter(DateFormatter('%M'))
     
     st.pyplot(fig_humidity)
-    
-    st.subheader('Sélectionner la période pour les statistiques')
-    start_date = st.date_input('Date de début', min(timestamps).date())
-    end_date = st.date_input('Date de fin', max(timestamps).date())
-    
-    if start_date > end_date:
-        st.error('La date de début doit être antérieure ou égale à la date de fin.')
-        return
-    
-    if st.button('Afficher les statistiques'):
-        filtered_temps = filter_data_by_date(timestamps, temperatures, datetime.combine(start_date, datetime.min.time()), datetime.combine(end_date, datetime.max.time()))
-        filtered_humidities = filter_data_by_date(timestamps, humidities, datetime.combine(start_date, datetime.min.time()), datetime.combine(end_date, datetime.max.time()))
-        
-        if not filtered_temps or not filtered_humidities:
-            st.warning('Aucune donnée disponible pour la période sélectionnée.')
-            return
-        
-        st.subheader('Statistiques des températures')
-        moyenne_temp, max_temp, min_temp, ecart_type_temp = compute_statistics(filtered_temps)
-        st.write(f"Moyenne: {moyenne_temp:.2f} °C")
-        st.write(f"Valeur maximale: {max_temp:.2f} °C")
-        st.write(f"Valeur minimale: {min_temp:.2f} °C")
-        st.write(f"Écart type: {ecart_type_temp:.2f}")
-        
-        st.subheader('Statistiques des humidités')
-        moyenne_hum, max_hum, min_hum, ecart_type_hum = compute_statistics(filtered_humidities)
-        st.write(f"Moyenne: {moyenne_hum:.2f} %")
-        st.write(f"Valeur maximale: {max_hum:.2f} %")
-        st.write(f"Valeur minimale: {min_hum:.2f} %")
-        st.write(f"Écart type: {ecart_type_hum:.2f}")
-    
+
     st.subheader('Carte des capteurs')
-    map_center = [48.8566, 2.3522]  # Center the map on Paris, for example
+    map_center = [48.8566, 2.3522] 
     m = folium.Map(location=map_center, zoom_start=5)
-    
+
     for loc, temp, hum in zip(locations, temperatures, humidities):
         if loc:
             folium.Marker(
@@ -138,6 +108,37 @@ def main():
             ).add_to(m)
     
     st_folium(m, width=700, height=500)
+    
+    st.subheader('Sélectionner la période pour les statistiques')
+    start_date = st.date_input('Date de début', min(timestamps).date())
+    end_date = st.date_input('Date de fin', max(timestamps).date())
+    
+    if start_date > end_date:
+        st.error('La date de début doit être antérieure ou égale à la date de fin.')
+        return
+    
+    filtered_temps = filter_data_by_date(timestamps, temperatures, datetime.combine(start_date, datetime.min.time()), datetime.combine(end_date, datetime.max.time()))
+    filtered_humidities = filter_data_by_date(timestamps, humidities, datetime.combine(start_date, datetime.min.time()), datetime.combine(end_date, datetime.max.time()))
+    
+    if not filtered_temps or not filtered_humidities:
+        st.warning('Aucune donnée disponible pour la période sélectionnée.')
+        return
+    
+    st.subheader('Statistiques des températures')
+    moyenne_temp, max_temp, min_temp, ecart_type_temp = compute_statistics(filtered_temps)
+    st.write(f"Moyenne: {moyenne_temp:.2f} °C")
+    st.write(f"Valeur maximale: {max_temp:.2f} °C")
+    st.write(f"Valeur minimale: {min_temp:.2f} °C")
+    st.write(f"Écart type: {ecart_type_temp:.2f}")
+    
+    st.subheader('Statistiques des humidités')
+    moyenne_hum, max_hum, min_hum, ecart_type_hum = compute_statistics(filtered_humidities)
+    st.write(f"Moyenne: {moyenne_hum:.2f} %")
+    st.write(f"Valeur maximale: {max_hum:.2f} %")
+    st.write(f"Valeur minimale: {min_hum:.2f} %")
+    st.write(f"Écart type: {ecart_type_hum:.2f}")
+
+    
 
 if __name__ == '__main__':
     main()
