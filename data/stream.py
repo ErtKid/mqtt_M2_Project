@@ -21,12 +21,14 @@ def fetch_data():
         
         if snapshot is None:
             st.warning('No data found in Firebase.')
-            return [], [], [], []
+            return [], [], [], [], [], []
         
         timestamps = []
         temperatures = []
         humidities = []
-        locations = []
+        latitude = []
+        longitude = []
+        id_capteur = []
         
         if isinstance(snapshot, list):
             for entry in snapshot:
@@ -34,17 +36,19 @@ def fetch_data():
                     timestamps.append(entry.get('timestamp', ''))
                     temperatures.append(entry.get('temperature', ''))
                     humidities.append(entry.get('humidity', ''))
-                    locations.append(entry.get('location', {}))
+                    longitude.append(entry.get('longitude', ''))
+                    latitude.append(entry.get('latitude', ''))
+                    id_capteur.append(entry.get('id', ''))
         else:
             st.warning('Unexpected data format returned from Firebase.')
-            return [], [], [], []
+            return [], [], [], [], [], []
         
-        return timestamps, temperatures, humidities, locations
+        return timestamps, temperatures, humidities, latitude, longitude, id_capteur
     
     except Exception as e:
         st.error(f"Error fetching data from Firebase: {e}")
-        return [], [], [], []
-
+        return [], [], [], [], [], []
+        
 def compute_statistics(data):
     data = np.array(data, dtype=float)
     moyenne = np.mean(data)
@@ -61,7 +65,7 @@ def main():
     st.title('Visualisation des données de température et d\'humidité')
     st.header('Visualisation des données de température et d\'humidité')
     
-    timestamps, temperatures, humidities, locations = fetch_data()
+    timestamps, temperatures, humidities, latitude, longitude, id_capteur = fetch_data()
     
     if not timestamps:
         st.warning('Aucune donnée disponible à afficher.')
@@ -96,13 +100,12 @@ def main():
     st.pyplot(fig_humidity)
 
     st.subheader('Carte des capteurs')
-    map_center = [48.8566, 2.3522] 
+    map_center = [40, 30] 
     m = folium.Map(location=map_center, zoom_start=5)
-
-    for loc, temp, hum in zip(locations, temperatures, humidities):
-        if loc:
+    for lat, lon, temp, hum in zip(latitude, longitude, temperatures, humidities):
+        if lat and lon :
             folium.Marker(
-                location=[loc.get('lat', 0), loc.get('lon', 0)],
+                location=[(next(iter(latitude))), (next(iter(longitude)))],
                 popup=f"Température: {temp} °C\nHumidité: {hum} %",
                 icon=folium.Icon(color='blue', icon='info-sign')
             ).add_to(m)
@@ -137,8 +140,6 @@ def main():
     st.write(f"Valeur maximale: {max_hum:.2f} %")
     st.write(f"Valeur minimale: {min_hum:.2f} %")
     st.write(f"Écart type: {ecart_type_hum:.2f}")
-
-    
 
 if __name__ == '__main__':
     main()
