@@ -1,5 +1,13 @@
 import paho.mqtt.client as mqtt
 import json
+import firebase_admin
+from firebase_admin import credentials, db
+
+# Initialize Firebase
+cred = credentials.Certificate('./devsecopslbprojet-firebase-adminsdk-zhm7r-e29a950853.json')  # Replace with the path to your Firebase credentials JSON file
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://devsecopslbprojet-default-rtdb.europe-west1.firebasedatabase.app/'  # Replace with your Firebase Realtime Database URL
+})
 
 # Fonction de connexion MQTT et de réception de message
 def on_connect(client, userdata, flags, rc):
@@ -13,6 +21,13 @@ def on_message(client, userdata, msg):
         if payload:
             data = json.loads(payload)
             print(f"Received message: Temperature: {data['temp']}°C, Humidity: {data['humidity']}%")
+            
+            # Push data to Firebase
+            ref = db.reference('sensor_data')
+            ref.push({
+                'temperature': data['temp'],
+                'humidity': data['humidity']
+            })
         else:
             print("Received an empty message")
     except json.JSONDecodeError as e:
