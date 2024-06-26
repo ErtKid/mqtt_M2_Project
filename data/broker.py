@@ -22,7 +22,7 @@ def measure():
     }
 
 print("Connecting to MQTT server... ", end="")
-client = mqtt.Client(client_id=MQTT_CLIENT_ID, protocol=mqtt.MQTTv311)  # Utilisation de MQTTv311
+client = mqtt.Client(client_id=MQTT_CLIENT_ID, protocol=mqtt.MQTTv311)
 client.connect(MQTT_BROKER)
 print("Connected!")
 
@@ -33,7 +33,7 @@ while True:
     if message != prev_weather:
         print("Updated!")
         print(f"Reporting to MQTT topic {MQTT_TOPIC}: {message}")
-        client.publish(MQTT_TOPIC, message)
+        client.publish(MQTT_TOPIC, message, qos=1)  # Utilisation de QoS 1
         prev_weather = message
     else:
         print("No change")
