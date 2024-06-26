@@ -4,6 +4,11 @@ from firebase_admin import credentials, db
 from datetime import datetime
 import matplotlib.pyplot as plt
 
+if not firebase_admin._apps:
+    cred = credentials.Certificate('./devsecopslbprojet-firebase-adminsdk-zhm7r-342dcd7ba6.json')  
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://devsecopslbprojet-default-rtdb.europe-west1.firebasedatabase.app/' 
+    })
 
 # Function to fetch data from Firebase
 def fetch_data():
