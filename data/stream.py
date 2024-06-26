@@ -5,11 +5,13 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.dates import DateFormatter
+import folium
+from streamlit_folium import st_folium
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate('./devsecopslbprojet-firebase-adminsdk-zhm7r-342dcd7ba6.json')  
+    cred = credentials.Certificate('./devsecopslbprojet-firebase-adminsdk-zhm7r-342dcd7ba6.json')
     firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://devsecopslbprojet-default-rtdb.europe-west1.firebasedatabase.app/' 
+        'databaseURL': 'https://devsecopslbprojet-default-rtdb.europe-west1.firebasedatabase.app/'
     })
 
 def fetch_data():
@@ -19,11 +21,12 @@ def fetch_data():
         
         if snapshot is None:
             st.warning('No data found in Firebase.')
-            return [], [], []
+            return [], [], [], []
         
         timestamps = []
         temperatures = []
         humidities = []
+        locations = []
         
         if isinstance(snapshot, list):
             for entry in snapshot:
@@ -31,15 +34,16 @@ def fetch_data():
                     timestamps.append(entry.get('timestamp', ''))
                     temperatures.append(entry.get('temperature', ''))
                     humidities.append(entry.get('humidity', ''))
+                    locations.append(entry.get('location', {}))
         else:
             st.warning('Unexpected data format returned from Firebase.')
-            return [], [], []
+            return [], [], [], []
         
-        return timestamps, temperatures, humidities
+        return timestamps, temperatures, humidities, locations
     
     except Exception as e:
         st.error(f"Error fetching data from Firebase: {e}")
-        return [], [], []
+        return [], [], [], []
 
 def compute_statistics(data):
     data = np.array(data, dtype=float)
@@ -57,7 +61,7 @@ def main():
     st.title('Visualisation des données de température et d\'humidité')
     st.header('Visualisation des données de température et d\'humidité')
     
-    timestamps, temperatures, humidities = fetch_data()
+    timestamps, temperatures, humidities, locations = fetch_data()
     
     if not timestamps:
         st.warning('Aucune donnée disponible à afficher.')
@@ -120,6 +124,20 @@ def main():
         st.write(f"Valeur maximale: {max_hum:.2f} %")
         st.write(f"Valeur minimale: {min_hum:.2f} %")
         st.write(f"Écart type: {ecart_type_hum:.2f}")
+    
+    st.subheader('Carte des capteurs')
+    map_center = [48.8566, 2.3522]  # Center the map on Paris, for example
+    m = folium.Map(location=map_center, zoom_start=5)
+    
+    for loc, temp, hum in zip(locations, temperatures, humidities):
+        if loc:
+            folium.Marker(
+                location=[loc.get('lat', 0), loc.get('lon', 0)],
+                popup=f"Température: {temp} °C\nHumidité: {hum} %",
+                icon=folium.Icon(color='blue', icon='info-sign')
+            ).add_to(m)
+    
+    st_folium(m, width=700, height=500)
 
 if __name__ == '__main__':
     main()
